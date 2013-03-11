@@ -72,9 +72,9 @@
 	}
 	
 	double result = [self.calculatorBrain performOperation:sender.currentTitle];
-	NSString *resultString = [NSString stringWithFormat:@"%g", result];
-	[self.calculatorBrain pushOperand:result];
-	self.displayResult.text = resultString;
+	self.displayProgram.text = [CalculatorBrain descriptionOfProgram:self.calculatorBrain.program];
+	self.displayResult.text = [NSString stringWithFormat:@"%g", result];
+	
 }
 
 - (IBAction)enterPressed {
