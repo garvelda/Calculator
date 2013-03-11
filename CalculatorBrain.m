@@ -52,30 +52,31 @@
 
 + (NSString *)popOperandOffProgramStackForDescription:(NSMutableArray *)stack {
     NSString *description = @"";
-	NSSet *oneParamaterOperations = [[NSSet alloc] initWithObjects: @"sqrt", @"sin", @"cos", nil];
-	NSSet *twoParamatersOperations = [[NSSet alloc] initWithObjects: @"+", @"-", @"*", @"/", nil];
 	
     id topOfStack = [stack lastObject];
     if (topOfStack) [stack removeLastObject];
     
-    if ([topOfStack isKindOfClass:[NSNumber class]]) {
+	if ([topOfStack isKindOfClass:[NSNumber class]]) {
         description = [description stringByAppendingString:topOfStack];
     } else if ([topOfStack isKindOfClass:[NSString class]]) {
         NSString *operation = topOfStack;
 		
-		if ([oneParamaterOperations containsObject:operation]) {
+        if ([operation isEqualToString:@"+"]) {
+            description = [description stringByAppendingFormat:@" (%@ %@ %@)", [self popOperandOffProgramStackForDescription:stack], operation, [self popOperandOffProgramStackForDescription:stack]];
+        } else if ([@"*" isEqualToString:operation]) {
+            description = [description stringByAppendingFormat:@" (%@ %@ %@)", [self popOperandOffProgramStackForDescription:stack], operation, [self popOperandOffProgramStackForDescription:stack]];
+        } else if ([operation isEqualToString:@"-"]) {
+            double subtrahend = [self popOperandOffProgramStack:stack];
+            description = [description stringByAppendingFormat:@" (%@ %@ %f)", [self popOperandOffProgramStackForDescription:stack], operation, subtrahend];
+        } else if ([operation isEqualToString:@"/"]) {
+            double divisor = [self popOperandOffProgramStack:stack];
+            if (divisor) description = [description stringByAppendingFormat:@" (%@ %@ %f)", [self popOperandOffProgramStackForDescription:stack], operation, divisor];
+        } else if ([operation isEqualToString:@"sqrt"]) {
 			description = [description stringByAppendingFormat:@" %@(%@)", operation, [self popOperandOffProgramStackForDescription:stack]];
-		} else if ([twoParamatersOperations containsObject:operation]) {
-			id secondParameter = [self popOperandOffProgramStackForDescription:stack];
-
-			if ([secondParameter isKindOfClass:[NSString class]]) {
-				if ([oneParamaterOperations containsObject:secondParameter]) {
-					description = [description stringByAppendingFormat:@" %@(%@)", operation, [self popOperandOffProgramStackForDescription:stack]];
-				}
-			} else if ([secondParameter isKindOfClass:[NSNumber class]]) {
-				description = [description stringByAppendingFormat:@" (%@ %@ %@)", [self popOperandOffProgramStackForDescription:stack], operation, secondParameter];
-			}
-		}
+        } else if ([operation isEqualToString:@"sin"]) {
+			description = [description stringByAppendingFormat:@" %@(%@)", operation, [self popOperandOffProgramStackForDescription:stack]];
+        } else if ([operation isEqualToString:@"cos"]) {
+			description = [description stringByAppendingFormat:@" %@(%@)", operation, [self popOperandOffProgramStackForDescription:stack]];		}
     }
 	
     return description;
