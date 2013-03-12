@@ -108,7 +108,7 @@
 	}
 	
 	self.displayVariablesValues.text = [self formatVariablesValues:self.testVariableValues];
-	[CalculatorBrain runProgram:self.calculatorBrain.program usingVariableValues:self.testVariableValues];
+	self.displayResult.text = [NSString stringWithFormat:@"%g", [CalculatorBrain runProgram:self.calculatorBrain.program usingVariableValues:self.testVariableValues]];
 }
 
 - (NSString *) formatVariablesValues:(NSDictionary *) dict {
@@ -137,6 +137,7 @@
 	self.displayResult.text = @"0";
 	self.displayProgram.text = @"";
 	self.displayVariablesValues.text = @"";
+	[self.testVariableValues removeAllObjects];
 }
 
 @end

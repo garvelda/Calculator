@@ -131,26 +131,65 @@
     if ([topOfStack isKindOfClass:[NSNumber class]]) {
         result = [topOfStack doubleValue];
     } else if ([topOfStack isKindOfClass:[NSString class]]) {
-        NSString *operation = topOfStack;
+		NSString *operation = topOfStack;
 		
-        if ([operation isEqualToString:@"+"]) {
-            result = [self popOperandOffProgramStack:stack] +
+		if ([operation isEqualToString:@"+"]) {
+			result = [self popOperandOffProgramStack:stack] +
 			[self popOperandOffProgramStack:stack];
-        } else if ([@"*" isEqualToString:operation]) {
-            result = [self popOperandOffProgramStack:stack] *
+		} else if ([@"*" isEqualToString:operation]) {
+			result = [self popOperandOffProgramStack:stack] *
 			[self popOperandOffProgramStack:stack];
-        } else if ([operation isEqualToString:@"-"]) {
-            double subtrahend = [self popOperandOffProgramStack:stack];
-            result = [self popOperandOffProgramStack:stack] - subtrahend;
-        } else if ([operation isEqualToString:@"/"]) {
-            double divisor = [self popOperandOffProgramStack:stack];
-            if (divisor) result = [self popOperandOffProgramStack:stack] / divisor;
-        } else if ([operation isEqualToString:@"sqrt"]) {
+		} else if ([operation isEqualToString:@"-"]) {
+			double subtrahend = [self popOperandOffProgramStack:stack];
+			result = [self popOperandOffProgramStack:stack] - subtrahend;
+		} else if ([operation isEqualToString:@"/"]) {
+			double divisor = [self popOperandOffProgramStack:stack];
+			if (divisor) result = [self popOperandOffProgramStack:stack] / divisor;
+		} else if ([operation isEqualToString:@"sqrt"]) {
 			result = sqrt([self popOperandOffProgramStack:stack]);
-        } else if ([operation isEqualToString:@"sin"]) {
+		} else if ([operation isEqualToString:@"sin"]) {
 			result = sin([self popOperandOffProgramStack:stack]);
-        } else if ([operation isEqualToString:@"cos"]) {
+		} else if ([operation isEqualToString:@"cos"]) {
 			result = cos([self popOperandOffProgramStack:stack]);
+		}
+    }
+	
+    return result;
+}
+
++ (double)popOperandOffProgramStack:(NSMutableArray *)stack usingVariables:(NSDictionary *) variables {
+    double result = 0;
+	
+    id topOfStack = [stack lastObject];
+    if (topOfStack) [stack removeLastObject];
+    
+    if ([topOfStack isKindOfClass:[NSNumber class]]) {
+        result = [topOfStack doubleValue];
+    } else if ([topOfStack isKindOfClass:[NSString class]]) {
+		if ([self isVariable:topOfStack]) {
+			result = [[variables objectForKey:topOfStack] doubleValue];
+		} else {
+			NSString *operation = topOfStack;
+			
+			if ([operation isEqualToString:@"+"]) {
+				result = [self popOperandOffProgramStack:stack usingVariables:variables] +
+				[self popOperandOffProgramStack:stack usingVariables:variables];
+			} else if ([@"*" isEqualToString:operation]) {
+				result = [self popOperandOffProgramStack:stack usingVariables:variables] *
+				[self popOperandOffProgramStack:stack usingVariables:variables];
+			} else if ([operation isEqualToString:@"-"]) {
+				double subtrahend = [self popOperandOffProgramStack:stack usingVariables:variables];
+				result = [self popOperandOffProgramStack:stack usingVariables:variables] - subtrahend;
+			} else if ([operation isEqualToString:@"/"]) {
+				double divisor = [self popOperandOffProgramStack:stack usingVariables:variables];
+				if (divisor) result = [self popOperandOffProgramStack:stack usingVariables:variables] / divisor;
+			} else if ([operation isEqualToString:@"sqrt"]) {
+				result = sqrt([self popOperandOffProgramStack:stack usingVariables:variables]);
+			} else if ([operation isEqualToString:@"sin"]) {
+				result = sin([self popOperandOffProgramStack:stack usingVariables:variables]);
+			} else if ([operation isEqualToString:@"cos"]) {
+				result = cos([self popOperandOffProgramStack:stack usingVariables:variables]);
+			}
 		}
     }
 	
@@ -169,14 +208,12 @@
 
 + (double)runProgram:(id)program usingVariableValues:(NSDictionary *) variables {
     NSMutableArray *stack;
-	NSSet *variablesNameInProgram;
 	
     if ([program isKindOfClass:[NSArray class]]) {
         stack = [program mutableCopy];
-		variablesNameInProgram = [self variablesUsedInProgram:program];
     }
 	
-    return [self popOperandOffProgramStack:stack];
+    return [self popOperandOffProgramStack:stack usingVariables:variables];
 }
 
 @end
