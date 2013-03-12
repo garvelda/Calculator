@@ -63,7 +63,6 @@
 			self.userIsInTheMiddleOfEnteringANumber = YES;
 		}
     }
-        
 }
 
 - (IBAction)operationPressed:(UIButton *)sender {
@@ -90,7 +89,6 @@
 		if (displayResultTextLength > 0) {
 			[displayResultText deleteCharactersInRange:NSMakeRange([displayResultText length]-1, 1)];
 			self.displayResult.text = [displayResultText copy];
-			NSLog(@"nueva cadena: %@", displayResultText);
 		} else if (displayResultTextLength == 0) {
 			self.userIsInTheMiddleOfEnteringANumber = NO;
 			[CalculatorBrain runProgram:self.calculatorBrain.program];
@@ -110,6 +108,7 @@
 	}
 	
 	self.displayVariablesValues.text = [self formatVariablesValues:self.testVariableValues];
+	[CalculatorBrain runProgram:self.calculatorBrain.program usingVariableValues:self.testVariableValues];
 }
 
 - (NSString *) formatVariablesValues:(NSDictionary *) dict {
@@ -129,9 +128,15 @@
 }
 
 - (IBAction)variablePressed:(UIButton *)sender {
+    NSString *variable = sender.currentTitle;
+	self.displayResult.text = variable;
+	[self.calculatorBrain pushVariable:variable];
 }
 
 - (IBAction)cPressed {
+	self.displayResult.text = @"0";
+	self.displayProgram.text = @"";
+	self.displayVariablesValues.text = @"";
 }
 
 @end

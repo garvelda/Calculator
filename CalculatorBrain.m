@@ -11,31 +11,9 @@
 
 @interface CalculatorBrain()
 @property (nonatomic, strong) NSMutableArray *programStack;
-@property (nonatomic) NSMutableDictionary *testVariableValues;
-
-@property (nonatomic) NSSet *operations;
-@property (nonatomic) NSSet *variables;
 @end
 
 @implementation CalculatorBrain
-
-@synthesize programStack = _programStack;
-
-- (NSSet *) operations {
-	if (!_operations) {
-		_operations = [[NSSet alloc] initWithObjects: @"+", @"-", @"*", @"/", @"sqrt", @"sin", @"cos", nil];
-	}
-	
-	return _operations;
-}
-
-- (NSSet *) variables {
-	if (!_variables) {
-		_variables = [[NSSet alloc] initWithObjects: @"x", @"y", @"z", nil];
-	}
-	
-	return _variables;
-}
 
 - (NSMutableArray *)programStack {
     if (_programStack == nil) _programStack = [[NSMutableArray alloc] init];
@@ -50,50 +28,75 @@
 	return [CalculatorBrain descriptionOfProgram:self.program];
 }
 
++ (BOOL) isTwoParametersOperation:(NSString *) operation {
+	NSSet *twoParametersOperations = [NSSet setWithObjects:@"+",@"-",@"*",@"/", nil];
+	BOOL itIs = NO;
+	
+	if (operation && [twoParametersOperations containsObject:operation]) {
+		itIs = YES;
+	}
+	
+	return itIs;
+}
+
++ (BOOL) isOneParameterOperation:(NSString *) operation {
+	NSSet *oneParameterOperations = [NSSet setWithObjects:@"sin",@"cos",@"sqrt", nil];
+	BOOL itIs = NO;
+	
+	if (operation && [oneParameterOperations containsObject:operation]) {
+		itIs = YES;
+	}
+	
+	return itIs;
+}
+
++ (BOOL) isVariable:(NSString *) operation {
+	NSSet *variables = [NSSet setWithObjects:@"x",@"y",@"z", nil];
+	BOOL itIs = NO;
+	
+	if (operation && [variables containsObject:operation]) {
+		itIs = YES;
+	}
+	
+	return itIs;
+}
+
 + (NSString *)popOperandOffProgramStackForDescription:(NSMutableArray *)stack {
     NSString *description = @"";
 	
     id topOfStack = [stack lastObject];
-    if (topOfStack) [stack removeLastObject];
+	
+    if (topOfStack) {
+		[stack removeLastObject];
+	}
     
 	if ([topOfStack isKindOfClass:[NSNumber class]]) {
         description = [description stringByAppendingString:topOfStack];
     } else if ([topOfStack isKindOfClass:[NSString class]]) {
-        NSString *operation = topOfStack;
-		
-        if ([operation isEqualToString:@"+"]) {
-            description = [description stringByAppendingFormat:@" (%@ %@ %@)", [self popOperandOffProgramStackForDescription:stack], operation, [self popOperandOffProgramStackForDescription:stack]];
-        } else if ([@"*" isEqualToString:operation]) {
-            description = [description stringByAppendingFormat:@" (%@ %@ %@)", [self popOperandOffProgramStackForDescription:stack], operation, [self popOperandOffProgramStackForDescription:stack]];
-        } else if ([operation isEqualToString:@"-"]) {
-            double subtrahend = [self popOperandOffProgramStack:stack];
-            description = [description stringByAppendingFormat:@" (%@ %@ %f)", [self popOperandOffProgramStackForDescription:stack], operation, subtrahend];
-        } else if ([operation isEqualToString:@"/"]) {
-            double divisor = [self popOperandOffProgramStack:stack];
-            if (divisor) description = [description stringByAppendingFormat:@" (%@ %@ %f)", [self popOperandOffProgramStackForDescription:stack], operation, divisor];
-        } else if ([operation isEqualToString:@"sqrt"]) {
-			description = [description stringByAppendingFormat:@" %@(%@)", operation, [self popOperandOffProgramStackForDescription:stack]];
-        } else if ([operation isEqualToString:@"sin"]) {
-			description = [description stringByAppendingFormat:@" %@(%@)", operation, [self popOperandOffProgramStackForDescription:stack]];
-        } else if ([operation isEqualToString:@"cos"]) {
-			description = [description stringByAppendingFormat:@" %@(%@)", operation, [self popOperandOffProgramStackForDescription:stack]];		}
+       if ([self isTwoParametersOperation:topOfStack]) {
+            description = [description stringByAppendingFormat:@" (%@ %@ %@)", [self popOperandOffProgramStackForDescription:stack], topOfStack, [self popOperandOffProgramStackForDescription:stack]];
+        } else if ([self isOneParameterOperation:topOfStack]) {
+			description = [description stringByAppendingFormat:@" %@(%@)", topOfStack, [self popOperandOffProgramStackForDescription:stack]];
+        } else if ([self isVariable:topOfStack]) {
+			description = topOfStack;
+		}
     }
 	
     return description;
 }
 
 + (NSSet *)variablesUsedInProgram:(id)program {
-	NSSet *setOfVariablesInProgram;
+	NSMutableSet *setOfVariablesInProgram;
 	
     if ([program isKindOfClass:[NSArray class]]) {
 		for (id operand in program) {
-			if ([operand isKindOfClass:[NSString class]]) {
-				// Si es una variable la agregamos al NSSet de salida
+			if ([operand isKindOfClass:[NSString class]] && [self isVariable:operand]) {
+				[setOfVariablesInProgram addObject:operand];
 			}
 		}
     }
 	
-	return setOfVariablesInProgram;
+	return [setOfVariablesInProgram copy];
 }
 
 + (NSString *)descriptionOfProgram:(id)program {
@@ -108,6 +111,10 @@
 
 - (void)pushOperand:(double)operand {
     [self.programStack addObject:[NSNumber numberWithDouble:operand]];
+}
+
+- (void)pushVariable:(NSString *)variable {
+    [self.programStack addObject:variable];
 }
 
 - (double)performOperation:(NSString *)operation {
@@ -155,6 +162,18 @@
 	
     if ([program isKindOfClass:[NSArray class]]) {
         stack = [program mutableCopy];
+    }
+	
+    return [self popOperandOffProgramStack:stack];
+}
+
++ (double)runProgram:(id)program usingVariableValues:(NSDictionary *) variables {
+    NSMutableArray *stack;
+	NSSet *variablesNameInProgram;
+	
+    if ([program isKindOfClass:[NSArray class]]) {
+        stack = [program mutableCopy];
+		variablesNameInProgram = [self variablesUsedInProgram:program];
     }
 	
     return [self popOperandOffProgramStack:stack];
